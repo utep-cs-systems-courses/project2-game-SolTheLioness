@@ -31,9 +31,7 @@ int main (void) {
   or_sr (0x18); //CPU off, GIE on
 }
 
-int state = 0;
 int seconds = 0;
-int second2 = 0;
 static int sw1Down;
 static int sw2Down;
 static int sw3Down;
@@ -58,7 +56,7 @@ void __interrupt_vec (PORT2_VECTOR) Port_2 () {
 }
 
 void tone_generator (int state) {
-  if (!state) {
+  if (state == 0) {
     buzzer_set_period (6810.5973);
     
   } else if (state == 1) {
@@ -75,93 +73,76 @@ void tone_generator (int state) {
   }
 }
 
-void __interrupt_vec (WDT_VECTOR) WDT () { // 250 interrupts/sec
-  if (sw1Down) {
-    P1OUT |= RED_LED;
-    buzzer_set_period (4545.4545);
+void state1 () {
+  P1OUT |= RED_LED;
+  buzzer_set_period (4545.4545);
+}
+
+void state2 () {
+  P1OUT |= GREEN_LED;
+  buzzer_set_period (2702.7027);
+}
+
+void state3 () {
+  if (seconds % 124 <= 62) { // Loop every 124 counts; execute outer ifs half of the time
+    P1OUT &= ~GREEN_LED;    
     
-  } else if (sw2Down) {
-    P1OUT |= GREEN_LED;
-    buzzer_set_period (2702.7027);
-    
-  } else if (sw3Down) {
-    if (seconds % 124 <= 62) { // Loop every 124 counts; execute outer ifs half of the time
-      P1OUT &= ~GREEN_LED;    
+    if (seconds % 5 == 0) {
+      P1OUT |= RED_LED;
       
-      if (seconds % 5 == 0) {
-	P1OUT |= RED_LED;
-	
-      } else {
-	P1OUT &= ~RED_LED;
-	}
     } else {
       P1OUT &= ~RED_LED;
-      
-      if (seconds % 5 == 0) {
-	P1OUT |= GREEN_LED;
-	
-      } else {
-	P1OUT &= ~GREEN_LED;
-      }
     }
+  } else {
+    P1OUT &= ~RED_LED;
     
-    
-
-    /*
-    if (seconds == 0) {
-      tone_generator (0);
-    } else if (seconds == 63 || seconds == 435) {
-      tone_generator (1);
-    } else if (seconds == 125 || seconds == 373) {
-      tone_generator (2);
-    } else if (seconds == 187 || seconds == 311) {
-      tone_generator (3);
-    } else if (seconds == 249) {
-      tone_generator (4);
-    }
-    
-    if (seconds <= 62) {
-      buzzer_set_period (6810.5973);
+    if (seconds % 5 == 0) {
+      P1OUT |= GREEN_LED;
       
-    } else if (seconds <= 124 || seconds > 434 && seconds <= 496) {
-      buzzer_set_period (6067.4089);
-      
-    } else if (seconds <= 186 || seconds > 372 && seconds <= 434) {
-      buzzer_set_period (5405.5515);
-      
-    } else if (seconds <= 248 || seconds > 310 && seconds <= 372) {
-      buzzer_set_period (5102.0408);
-      
-    } else if (seconds <= 310) {
-      buzzer_set_period (4545.4545);
-    }
-    */
-    
-    seconds++;
-    if (seconds >= 496) {
-      seconds = 0;
-    }
-    
-    
-    /*
-    if (seconds <= 31) {
-      if (seconds % 5 == 0) {
-      P1OUT |= LEDS;
-      
-      } else {
-	P1OUT &= ~LEDS;
-      }
-      buzzer_set_period (2024.7628);
-      
-    } else if (seconds <= 62) {
-      P1OUT &= ~LEDS;
-      buzzer_set_period (0);
- 
     } else {
-      seconds = 0;
+      P1OUT &= ~GREEN_LED;
     }
-    seconds++;
-    */
+  }
+  seconds++;
+  if (seconds >= 496) {
+    seconds = 0;
+  }
+
+  if (seconds == 0) {
+    tone_generator (0);
+
+  } else if (seconds == 63 || seconds == 435) {
+    tone_generator (1);
+
+  } else if (seconds == 125 || seconds == 373) {
+    tone_generator (2);
+
+  } else if (seconds == 187 || seconds == 311) {
+    tone_generator (3);
+
+  } else if (seconds == 249) {
+    tone_generator (4);
+
+  }
+}
+
+void state4 () {
+  
+}
+
+void __interrupt_vec (WDT_VECTOR) WDT () { // 250 interrupts/sec
+  if (sw1Down) {
+    state1 ();
+    
+  } else if (sw2Down) {
+    state2 ();
+    
+  } else if (sw3Down) {
+    state3 ();
+    
+  } else if (sw4Down) {
+    state4 ();
+    
   } else {
     P1OUT &= ~LEDS;
     buzzer_set_period (0);
