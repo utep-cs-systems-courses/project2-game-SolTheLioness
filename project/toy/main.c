@@ -31,7 +31,6 @@ int main (void) {
   or_sr (0x18); //CPU off, GIE on
 }
 
-int seconds = 0;
 static int sw1Down;
 static int sw2Down;
 static int sw3Down;
@@ -54,6 +53,10 @@ void __interrupt_vec (PORT2_VECTOR) Port_2 () {
     switch_interrupt_handler ();
   }
 }
+
+static int state = 0;
+static int count = 0;
+static int substate = -1;
 
 void tone_generator (int state) {
   if (state == 0) {
@@ -83,47 +86,43 @@ void state2 () {
   buzzer_set_period (2702.7027);
 }
 
-void state3 () {
-  if (seconds % 124 <= 62) { // Loop every 124 counts; execute outer ifs half of the time
-    P1OUT &= ~GREEN_LED;    
-    
-    if (seconds % 5 == 0) {
+void cal_ss (int dir) {
+  if (count % 125 == 0 || count == 0) {
+    if (dir == 0) {
+      substate++;
+    } else {
+      substate--;
+      if (substate == 0 && dir == 1) {
+	count = 1;
+	substate--;
+	}
+    }
+    tone_generator (substate);
+  }
+}
+
+void state3 (int dir) {
+  cal_ss (dir);
+  if (dir == 0) { // Direction 0, incrementing
+    if (count % 5 == 0) {
       P1OUT |= RED_LED;
       
     } else {
-      P1OUT &= ~RED_LED;
+      P1OUT &= ~LEDS;
     }
-  } else {
-    P1OUT &= ~RED_LED;
-    
-    if (seconds % 5 == 0) {
+    count++;
+  }
+
+  else { // Direction 1, decrementing
+    if (count %5 == 0) {
       P1OUT |= GREEN_LED;
       
     } else {
-      P1OUT &= ~GREEN_LED;
+      P1OUT &= ~LEDS;
     }
+    count--;
   }
-  seconds++;
-  if (seconds >= 496) {
-    seconds = 0;
-  }
-
-  if (seconds == 0) {
-    tone_generator (0);
-
-  } else if (seconds == 63 || seconds == 435) {
-    tone_generator (1);
-
-  } else if (seconds == 125 || seconds == 373) {
-    tone_generator (2);
-
-  } else if (seconds == 187 || seconds == 311) {
-    tone_generator (3);
-
-  } else if (seconds == 249) {
-    tone_generator (4);
-
-  }
+  
 }
 
 void state4 () {
@@ -138,7 +137,15 @@ void __interrupt_vec (WDT_VECTOR) WDT () { // 250 interrupts/sec
     state2 ();
     
   } else if (sw3Down) {
-    state3 ();
+    if (count <= 0) {
+      state = 0;
+      P1OUT &= ~GREEN_LED;
+    }
+    if (count >= 625) {
+      state = 1;
+      P1OUT &= ~RED_LED;
+    }
+    state3 (state);
     
   } else if (sw4Down) {
     state4 ();
@@ -146,6 +153,8 @@ void __interrupt_vec (WDT_VECTOR) WDT () { // 250 interrupts/sec
   } else {
     P1OUT &= ~LEDS;
     buzzer_set_period (0);
-    seconds = 0;
+    count = 0;
+    state = 0;
+    substate = -1;
   }
 }
