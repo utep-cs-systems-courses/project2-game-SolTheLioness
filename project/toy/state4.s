@@ -4,7 +4,6 @@
 
 	.extern buzzer_set_period
 	.global state4AS
-	.type state4, %function
 	.extern P1OUT
 
 state4AS:
@@ -22,16 +21,17 @@ zeroCount:
 
 zeroState:
 	bis #1, &P1OUT
-	mov #5405.5515, 0(r1)
-	call buzzer_set_period
+	mov #5405, 0(r1)
+	call #buzzer_set_period
+	add #2, r1
 	jmp off
 
 oneState:
 	bis #64, &P1OUT
-	mov #7644.3833, 0(r1)
+	mov #7644, 0(r1)
 	call #buzzer_set_period
+	add #2, r1
 	jmp off
 
 off:
-	add #2, r1
 	pop r0

@@ -11,4 +11,6 @@
 #define SW4 BIT3           //0000 1000
 #define SWITCHES 0xF       //1111
 
+void state4AS (int count, int state);
+
 #endif

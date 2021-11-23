@@ -2,7 +2,6 @@
 #include "libTimer.h"
 #include "led.h"
 #include "buzzer.h"
-#include "state4.s"
 
 void switch_init () {
   P2REN |= SWITCHES;          // Enables resistors for switches

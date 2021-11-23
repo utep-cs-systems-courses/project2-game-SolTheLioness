@@ -1,12 +1,12 @@
 # Makefile configuration
-COMMON_OBJECTS = main.o buzzer.o
+COMMON_OBJECTS = main.o buzzer.o state4.o
 CPU            = msp430g2553
 CFLAGS         = -mmcu=${CPU} -I../h
 LDFLAGS        = -L/opt/ti/msp430_gcc/include
 
 # Switch the compiler (for internal make rules)
 CC             = msp430-elf-gcc
-AS             = msp430-eld-as
+AS             = msp430-elf-as
 
 all: toy.elf
 
@@ -23,5 +23,7 @@ clean:
 main.o: led.h buzzer.h
 
 buzzer.o: buzzer.h
+
+state4.o: state4.s
 
 wdInterruptHandler.o: led.h
