@@ -12,7 +12,6 @@ state4AS:
 	jmp off
 	
 zeroCount:
-	sub #2, r1		
 	cmp #0, r13
 	jz zeroState
 	cmp #1, r13
@@ -21,16 +20,14 @@ zeroCount:
 
 zeroState:
 	bis #1, &P1OUT
-	mov #5405, 0(r1)
+	mov #5405, r12
 	call #buzzer_set_period
-	add #2, r1
 	jmp off
 
 oneState:
 	bis #64, &P1OUT
-	mov #7644, 0(r1)
+	mov #7644, r12
 	call #buzzer_set_period
-	add #2, r1
 	jmp off
 
 off:
