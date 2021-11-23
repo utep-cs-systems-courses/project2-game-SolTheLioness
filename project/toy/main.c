@@ -2,6 +2,7 @@
 #include "libTimer.h"
 #include "led.h"
 #include "buzzer.h"
+#include "state4.s"
 
 void switch_init () {
   P2REN |= SWITCHES;          // Enables resistors for switches
@@ -76,9 +77,20 @@ void tone_generator (int state) {
   }
 }
 
+extern void state4AS (int count, int state);
+
 void state1 () {
-  P1OUT |= RED_LED;
+  if (count % 6 == 0) {
+    P1OUT |= RED_LED;
+    
+  } else {
+    P1OUT &= ~LEDS;
+  }
   buzzer_set_period (4545.4545);
+  count++;
+  if (count >= 7) {
+    count = 0;
+  }
 }
 
 void state2 () {
@@ -114,19 +126,30 @@ void state3 (int dir) {
   }
 
   else { // Direction 1, decrementing
-    if (count %5 == 0) {
-      P1OUT |= GREEN_LED;
-      
-    } else {
-      P1OUT &= ~LEDS;
-    }
+    P1OUT |= GREEN_LED;
     count--;
   }
   
 }
 
 void state4 () {
+  state4AS (count, state);
+  /*if (count == 0) {
+    if (state == 0) {
+      P1OUT |= 1;
+      buzzer_set_period (5405.5515);
+    } else if (state == 1) {
+      P1OUT |= 1000000;
+      buzzer_set_period (7644.3833);
+    }
+    }*/
   
+  count++;
+  if (count >= 251) {
+    P1OUT &= ~1000001;
+    count = 0;
+    state ^= 1;
+  }
 }
 
 void __interrupt_vec (WDT_VECTOR) WDT () { // 250 interrupts/sec
